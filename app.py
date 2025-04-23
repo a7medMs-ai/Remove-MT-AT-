@@ -1,6 +1,9 @@
 import streamlit as st
 import re
 from datetime import datetime
+from PIL import Image
+import io
+import base64
 
 # ====== Configuration ======
 st.set_page_config(
@@ -9,11 +12,33 @@ st.set_page_config(
     layout="wide"
 )
 
+# ====== Image Loading Function ======
+def load_image():
+    """Load company logo with error handling"""
+    try:
+        # Try loading from local assets first
+        with open("assets/future-group-logo.png", "rb") as f:
+            return Image.open(io.BytesIO(f.read()))
+    except FileNotFoundError:
+        try:
+            # Fallback to base64 encoded image
+            logo_base64 = "iVBORw0KGgoAAAANSUhEUgAA..."  # Truncated for example
+            return Image.open(io.BytesIO(base64.b64decode(logo_base64)))
+        except Exception:
+            return None
+    except Exception as e:
+        st.warning(f"Couldn't load logo: {str(e)}")
+        return None
+
 # ====== Header Section ======
 with st.container():
     col1, col2 = st.columns([1, 3])
     with col1:
-        st.image("assets/future-group-logo.png", width=150)
+        logo = load_image()
+        if logo:
+            st.image(logo, width=150)
+        else:
+            st.warning("Company logo not found")
     with col2:
         st.title("SDLXLIFF File Processor")
         st.caption("Translation Engineering Tool - 2025 • v1.0.0")
