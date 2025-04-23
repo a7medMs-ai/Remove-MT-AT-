@@ -11,22 +11,19 @@ st.set_page_config(
     page_icon="⚙️",
     layout="wide"
 )
-    with col1:
-        st.image("assets/future-group-logo.png", width=150)
-    with col2:
+
+# ====== Image Loading Function ======
+def load_image():
+    """Load company logo with error handling"""
     try:
         # Try loading from local assets first
         with open("assets/future-group-logo.png", "rb") as f:
             return Image.open(io.BytesIO(f.read()))
     except FileNotFoundError:
-        try:
-            # Fallback to base64 encoded image
-            logo_base64 = "iVBORw0KGgoAAAANSUhEUgAA..."  # Truncated for example
-            return Image.open(io.BytesIO(base64.b64decode(logo_base64)))
-        except Exception:
-            return None
+        st.warning("Company logo not found in assets folder")
+        return None
     except Exception as e:
-        st.warning(f"Couldn't load logo: {str(e)}")
+        st.warning(f"Error loading logo: {str(e)}")
         return None
 
 # ====== Header Section ======
@@ -37,7 +34,16 @@ with st.container():
         if logo:
             st.image(logo, width=150)
         else:
-            st.warning("Company logo not found")
+            # Fallback text if logo can't be loaded
+            st.markdown("""
+            <div style="width:150px; height:150px; 
+                       background-color:#f0f0f0; 
+                       display:flex; 
+                       align-items:center; 
+                       justify-content:center;">
+                <p style="color:#666;">Company Logo</p>
+            </div>
+            """, unsafe_allow_html=True)
     with col2:
         st.title("SDLXLIFF File Processor")
         st.caption("Translation Engineering Tool - 2025 • v1.0.0")
