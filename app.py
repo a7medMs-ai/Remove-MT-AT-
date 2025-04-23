@@ -11,10 +11,9 @@ st.set_page_config(
     page_icon="⚙️",
     layout="wide"
 )
-
-# ====== Image Loading Function ======
-def load_image():
-    """Load company logo with error handling"""
+    with col1:
+        st.image("assets/future-group-logo.png", width=150)
+    with col2:
     try:
         # Try loading from local assets first
         with open("assets/future-group-logo.png", "rb") as f:
