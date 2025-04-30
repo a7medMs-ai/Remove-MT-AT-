@@ -72,15 +72,17 @@ uploaded_file = st.file_uploader(
 )
 
 def process_content(xml_text):
-    # Replace any conf + origin="mt" + origin-system
+    # Replace full pattern using function to maintain order
+    def replacer(match):
+        return 'conf="ApprovedTranslation" origin="interactive"'
     xml_text = re.sub(
-        r'conf="[^"]*"\s+origin="mt"\s+origin-system="[^"]*"',
-        'conf="ApprovedTranslation" origin="interactive"',
+        r'conf="[^"]*"\\s+origin="mt"\\s+origin-system="[^"]*"',
+        replacer,
         xml_text
     )
-    # Fallback: Replace any origin="mt" + origin-system
+    # Fallback cleanup
     xml_text = re.sub(
-        r'origin="mt"\s+origin-system="[^"]*"',
+        r'origin="mt"\\s+origin-system="[^"]*"',
         'origin="interactive"',
         xml_text
     )
