@@ -1,11 +1,8 @@
-# Full script with no escaping issues and with added .rar support
-final_script_with_rar = """
 import streamlit as st
 import re
 from datetime import datetime
 from PIL import Image
 import io
-import base64
 import zipfile
 import os
 import tempfile
@@ -34,15 +31,12 @@ with st.container():
         if logo:
             st.image(logo, width=150)
         else:
-            st.markdown("""
-            <div style="width:150px; height:150px; 
-                       background-color:#f0f0f0; 
-                       display:flex; 
-                       align-items:center; 
-                       justify-content:center;">
-                <p style="color:#666;">Company Logo</p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(
+                \"\"\"<div style='width:150px; height:150px; background-color:#f0f0f0; display:flex; align-items:center; justify-content:center;'>
+                <p style='color:#666;'>Company Logo</p>
+                </div>\"\"\",
+                unsafe_allow_html=True
+            )
     with col2:
         st.title("SDLXLIFF File Processor")
         st.caption("Translation Engineering Tool - 2025 • v1.0.0")
@@ -51,39 +45,38 @@ with st.container():
 with st.sidebar:
     st.header("Developer Information")
     st.subheader("Ahmed Mostafa Saad")
-    st.write("""
-    - **Position**: Localization Engineering & TMS Support Team Lead
-    - **Contact**: [ahmed.mostafaa@future-group.com](mailto:ahmed.mostafaa@future-group.com)
-    - **Company**: Future Group Translation Services
-    """)
+    st.write(
+        '''
+        - **Position**: Localization Engineering & TMS Support Team Lead
+        - **Contact**: [ahmed.mostafaa@future-group.com](mailto:ahmed.mostafaa@future-group.com)
+        - **Company**: Future Group Translation Services
+        '''
+    )
     st.divider()
-    
     st.header("Tool Instructions")
-    st.write("""
-    1. Upload .sdlxliff file, or ZIP/RAR containing them
-    2. Automatic processing will:
-       - Convert all MT segments to: conf="ApprovedTranslation" origin="interactive"
-    3. Download processed files as ZIP
-    """)
+    st.write(
+        '''
+        1. Upload .sdlxliff file, or ZIP/RAR containing them
+        2. Automatic processing will:
+           - Convert all MT segments to: conf="ApprovedTranslation" origin="interactive"
+        3. Download processed files as ZIP
+        '''
+    )
 
 # ====== File Processing ======
 st.header("File Processing")
 uploaded_file = st.file_uploader(
-    "Upload SDLXLIFF / ZIP / RAR file", 
+    "Upload SDLXLIFF / ZIP / RAR file",
     type=["sdlxliff", "zip", "rar"],
     help="Supports single SDLXLIFF, ZIP or RAR with multiple files"
 )
 
 def process_content(xml_text):
-    # Replace full pattern using function to maintain order
-    def replacer(match):
-        return 'conf="ApprovedTranslation" origin="interactive"'
     xml_text = re.sub(
         r'conf="[^"]*"\\s+origin="mt"\\s+origin-system="[^"]*"',
-        replacer,
+        'conf="ApprovedTranslation" origin="interactive"',
         xml_text
     )
-    # Fallback cleanup
     xml_text = re.sub(
         r'origin="mt"\\s+origin-system="[^"]*"',
         'origin="interactive"',
@@ -118,26 +111,27 @@ if uploaded_file:
         elif uploaded_file.name.endswith(".zip"):
             with zipfile.ZipFile(uploaded_file, "r") as zip_ref:
                 zip_ref.extractall(temp_dir)
-                for root, dirs, files in os.walk(temp_dir):
+                for root, _, files in os.walk(temp_dir):
                     for file in files:
                         if file.endswith(".sdlxliff"):
                             file_count += 1
-                            file_path = os.path.join(root, file)
-                            with open(file_path, "rb") as f:
+                            with open(os.path.join(root, file), "rb") as f:
                                 process_single_file(file, f.read())
 
         elif uploaded_file.name.endswith(".rar"):
-            rf = rarfile.RarFile(uploaded_file)
+            with tempfile.NamedTemporaryFile(delete=False) as tmp_rar:
+                tmp_rar.write(uploaded_file.read())
+                tmp_rar_path = tmp_rar.name
+
+            rf = rarfile.RarFile(tmp_rar_path)
             rf.extractall(temp_dir)
-            for root, dirs, files in os.walk(temp_dir):
+            for root, _, files in os.walk(temp_dir):
                 for file in files:
                     if file.endswith(".sdlxliff"):
                         file_count += 1
-                        file_path = os.path.join(root, file)
-                        with open(file_path, "rb") as f:
+                        with open(os.path.join(root, file), "rb") as f:
                             process_single_file(file, f.read())
 
-        # Compress processed files
         zip_output_path = os.path.join(temp_dir, "processed_output.zip")
         with zipfile.ZipFile(zip_output_path, "w") as zf:
             for file in os.listdir(processed_dir):
@@ -154,9 +148,12 @@ if uploaded_file:
 
         st.write(f"✅ {processed_count} of {file_count} file(s) processed.")
 
-        st.markdown("""
-        <script>
-        var snd = new Audio("https://www.soundjay.com/buttons/sounds/button-09.mp3");
-        snd.play();
-        </script>
-        """, unsafe_allow_html=True)
+        st.components.v1.html(
+            '''
+            <script>
+                var snd = new Audio("https://www.soundjay.com/buttons/sounds/button-09.mp3");
+                snd.play();
+            </script>
+            ''',
+            height=0
+        )
