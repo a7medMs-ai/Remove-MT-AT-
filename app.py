@@ -1,6 +1,4 @@
-# Final corrected and fully Python-compliant version of the script
-
-fully_corrected_script = """
+final_verified_script = """
 import streamlit as st
 import re
 from datetime import datetime
@@ -95,6 +93,7 @@ if uploaded_file:
 
         file_count = 0
         processed_count = 0
+        processed_files = []
 
         def process_single_file(file_name, raw_data, processed_dir):
             try:
@@ -102,6 +101,7 @@ if uploaded_file:
                 processed = process_content(xml)
                 with open(os.path.join(processed_dir, file_name), "w", encoding="utf-8") as f_out:
                     f_out.write(processed)
+                processed_files.append(file_name)
                 return True
             except:
                 return False
@@ -153,6 +153,11 @@ if uploaded_file:
 
         st.write(f"✅ {processed_count} of {file_count} file(s) processed.")
 
+        if processed_files:
+            st.markdown("### Processed File Names:")
+            for fname in processed_files:
+                st.write(f"- {fname}")
+
         st.components.v1.html(
             '''
             <script>
@@ -164,9 +169,9 @@ if uploaded_file:
         )
 """
 
-# Save the final bulletproof script
-final_bulletproof_path = "/mnt/data/Remove-MT_AT-main/Remove-MT_AT-main/app_final_bulletproof.py"
-with open(final_bulletproof_path, 'w', encoding='utf-8') as f:
-    f.write(fully_corrected_script)
+# Save to final verified script path
+final_verified_script_path = "/mnt/data/Remove-MT_AT-main/Remove-MT_AT-main/app_final_verified.py"
+with open(final_verified_script_path, 'w', encoding='utf-8') as f:
+    f.write(final_verified_script)
 
-final_bulletproof_path
+final_verified_script_path
