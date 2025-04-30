@@ -32,9 +32,9 @@ with st.container():
             st.image(logo, width=150)
         else:
             st.markdown(
-                \"\"\"<div style='width:150px; height:150px; background-color:#f0f0f0; display:flex; align-items:center; justify-content:center;'>
-                <p style='color:#666;'>Company Logo</p>
-                </div>\"\"\",
+                '''<div style="width:150px; height:150px; background-color:#f0f0f0; display:flex; align-items:center; justify-content:center;">
+                <p style="color:#666;">Company Logo</p>
+                </div>''',
                 unsafe_allow_html=True
             )
     with col2:
