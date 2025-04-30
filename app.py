@@ -1,3 +1,5 @@
+# Full script with no escaping issues and with added .rar support
+final_script_with_rar = """
 import streamlit as st
 import re
 from datetime import datetime
@@ -7,6 +9,7 @@ import base64
 import zipfile
 import os
 import tempfile
+import rarfile
 
 # ====== Configuration ======
 st.set_page_config(
@@ -31,7 +34,7 @@ with st.container():
         if logo:
             st.image(logo, width=150)
         else:
-            st.markdown(\"\"\"
+            st.markdown("""
             <div style="width:150px; height:150px; 
                        background-color:#f0f0f0; 
                        display:flex; 
@@ -39,7 +42,7 @@ with st.container():
                        justify-content:center;">
                 <p style="color:#666;">Company Logo</p>
             </div>
-            \"\"\", unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
     with col2:
         st.title("SDLXLIFF File Processor")
         st.caption("Translation Engineering Tool - 2025 • v1.0.0")
@@ -48,27 +51,27 @@ with st.container():
 with st.sidebar:
     st.header("Developer Information")
     st.subheader("Ahmed Mostafa Saad")
-    st.write(\"\"\"
+    st.write("""
     - **Position**: Localization Engineering & TMS Support Team Lead
     - **Contact**: [ahmed.mostafaa@future-group.com](mailto:ahmed.mostafaa@future-group.com)
     - **Company**: Future Group Translation Services
-    \"\"\")
+    """)
     st.divider()
     
     st.header("Tool Instructions")
-    st.write(\"\"\"
-    1. Upload .sdlxliff file, or ZIP containing them
+    st.write("""
+    1. Upload .sdlxliff file, or ZIP/RAR containing them
     2. Automatic processing will:
        - Convert all MT segments to: conf="ApprovedTranslation" origin="interactive"
     3. Download processed files as ZIP
-    \"\"\")
+    """)
 
 # ====== File Processing ======
 st.header("File Processing")
 uploaded_file = st.file_uploader(
-    "Upload SDLXLIFF / ZIP file", 
-    type=["sdlxliff", "zip"],
-    help="Supports single SDLXLIFF or ZIP with multiple files"
+    "Upload SDLXLIFF / ZIP / RAR file", 
+    type=["sdlxliff", "zip", "rar"],
+    help="Supports single SDLXLIFF, ZIP or RAR with multiple files"
 )
 
 def process_content(xml_text):
@@ -123,6 +126,17 @@ if uploaded_file:
                             with open(file_path, "rb") as f:
                                 process_single_file(file, f.read())
 
+        elif uploaded_file.name.endswith(".rar"):
+            rf = rarfile.RarFile(uploaded_file)
+            rf.extractall(temp_dir)
+            for root, dirs, files in os.walk(temp_dir):
+                for file in files:
+                    if file.endswith(".sdlxliff"):
+                        file_count += 1
+                        file_path = os.path.join(root, file)
+                        with open(file_path, "rb") as f:
+                            process_single_file(file, f.read())
+
         # Compress processed files
         zip_output_path = os.path.join(temp_dir, "processed_output.zip")
         with zipfile.ZipFile(zip_output_path, "w") as zf:
@@ -140,9 +154,9 @@ if uploaded_file:
 
         st.write(f"✅ {processed_count} of {file_count} file(s) processed.")
 
-        st.markdown(\"\"\"
+        st.markdown("""
         <script>
         var snd = new Audio("https://www.soundjay.com/buttons/sounds/button-09.mp3");
         snd.play();
         </script>
-        \"\"\", unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
