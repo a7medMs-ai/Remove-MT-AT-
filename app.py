@@ -1,9 +1,3 @@
-import shutil
-import tempfile
-import zipfile
-
-# Prepare full updated app.py with multi-file + zip/rar support
-updated_app_code = """
 import streamlit as st
 import re
 from datetime import datetime
@@ -63,27 +57,33 @@ with st.sidebar:
     
     st.header("Tool Instructions")
     st.write(\"\"\"
-    1. Upload .sdlxliff file, or ZIP/RAR containing them
+    1. Upload .sdlxliff file, or ZIP containing them
     2. Automatic processing will:
-       - Change MT segments to interactive status
-    3. Download processed files
+       - Convert all MT segments to: conf="ApprovedTranslation" origin="interactive"
+    3. Download processed files as ZIP
     \"\"\")
 
 # ====== File Processing ======
 st.header("File Processing")
 uploaded_file = st.file_uploader(
-    "Upload SDLXLIFF / ZIP / RAR file", 
-    type=["sdlxliff", "zip"],  # rar optional if rarfile added
-    help="Supports single file or compressed archive"
+    "Upload SDLXLIFF / ZIP file", 
+    type=["sdlxliff", "zip"],
+    help="Supports single SDLXLIFF or ZIP with multiple files"
 )
 
 def process_content(xml_text):
-    patterns = [
-        r'conf="MTPE"\\s+origin="mt"\\s+origin-system="[^"]*"',
-        r'origin="mt"\\s+origin-system="[^"]*"'
-    ]
-    for pattern in patterns:
-        xml_text = re.sub(pattern, 'origin="interactive"', xml_text)
+    # Replace any conf + origin="mt" + origin-system
+    xml_text = re.sub(
+        r'conf="[^"]*"\s+origin="mt"\s+origin-system="[^"]*"',
+        'conf="ApprovedTranslation" origin="interactive"',
+        xml_text
+    )
+    # Fallback: Replace any origin="mt" + origin-system
+    xml_text = re.sub(
+        r'origin="mt"\s+origin-system="[^"]*"',
+        'origin="interactive"',
+        xml_text
+    )
     return xml_text
 
 if uploaded_file:
@@ -121,9 +121,6 @@ if uploaded_file:
                             with open(file_path, "rb") as f:
                                 process_single_file(file, f.read())
 
-        progress_bar = st.progress(0)
-        progress_bar.progress(min(processed_count / max(file_count, 1), 1.0))
-
         # Compress processed files
         zip_output_path = os.path.join(temp_dir, "processed_output.zip")
         with zipfile.ZipFile(zip_output_path, "w") as zf:
@@ -147,11 +144,3 @@ if uploaded_file:
         snd.play();
         </script>
         \"\"\", unsafe_allow_html=True)
-"""
-
-# Save to new file
-final_app_path = "/mnt/data/Remove-MT_AT-main/Remove-MT_AT-main/app_batch.py"
-with open(final_app_path, 'w', encoding='utf-8') as f:
-    f.write(updated_app_code)
-
-final_app_path
