@@ -8,14 +8,14 @@ import os
 import tempfile
 import rarfile
 
-# ========== CONFIG ==========
+# ====== Configuration ======
 st.set_page_config(
     page_title="SDLXLIFF Processor",
     page_icon="⚙️",
     layout="wide"
 )
 
-# ========== LOGO ==========
+# ====== Image Loading Function ======
 def load_image():
     try:
         with open("assets/future-group-logo.png", "rb") as f:
@@ -23,7 +23,7 @@ def load_image():
     except:
         return None
 
-# ========== HEADER ==========
+# ====== Header Section ======
 with st.container():
     col1, col2 = st.columns([1, 3])
     with col1:
@@ -32,38 +32,39 @@ with st.container():
             st.image(logo, width=150)
         else:
             st.markdown(
-                '''<div style="width:150px; height:150px; background-color:#f0f0f0; display:flex; align-items:center; justify-content:center;">
+                """<div style="width:150px; height:150px; background-color:#f0f0f0; display:flex; align-items:center; justify-content:center;">
                 <p style="color:#666;">Company Logo</p>
-                </div>''',
+                </div>""",
                 unsafe_allow_html=True
             )
     with col2:
         st.title("SDLXLIFF File Processor")
         st.caption("Translation Engineering Tool - 2025 • v1.0.0")
 
-# ========== SIDEBAR ==========
+# ====== Sidebar ======
 with st.sidebar:
     st.header("Developer Information")
     st.subheader("Ahmed Mostafa Saad")
     st.write(
-        '''
-        - **Position**: Localization Engineering & TMS Support Team Lead
-        - **Contact**: [ahmed.mostafaa@future-group.com](mailto:ahmed.mostafaa@future-group.com)
+        """
+        - **Position**: Localization Engineering & TMS Support Team Lead  
+        - **Contact**: [ahmed.mostafaa@future-group.com](mailto:ahmed.mostafaa@future-group.com)  
         - **Company**: Future Group Translation Services
-        '''
+        """
     )
     st.divider()
     st.header("Tool Instructions")
     st.write(
-        '''
-        1. Upload .sdlxliff file, or ZIP/RAR containing them
-        2. MT segments will be replaced with:
-           conf="ApprovedTranslation" origin="interactive"
+        """
+        1. Upload .sdlxliff file, or ZIP/RAR containing them  
+        2. Tool replaces:  
+           conf="..." origin="mt" origin-system="..."  
+           ⟶ conf="ApprovedTranslation" origin="interactive"  
         3. Download processed files
-        '''
+        """
     )
 
-# ========== FILE UPLOAD ==========
+# ====== File Upload and Processing ======
 st.header("File Processing")
 uploaded_file = st.file_uploader(
     "Upload SDLXLIFF / ZIP / RAR file",
@@ -72,12 +73,12 @@ uploaded_file = st.file_uploader(
 
 def process_content(xml_text):
     xml_text = re.sub(
-        r'conf="[^"]*"\\s+origin="mt"\\s+origin-system="[^"]*"',
+        r'conf="[^"]*"\s+origin="mt"\s+origin-system="[^"]*"',
         'conf="ApprovedTranslation" origin="interactive"',
         xml_text
     )
     xml_text = re.sub(
-        r'origin="mt"\\s+origin-system="[^"]*"',
+        r'origin="mt"\s+origin-system="[^"]*"',
         'origin="interactive"',
         xml_text
     )
@@ -132,6 +133,7 @@ if uploaded_file:
                         with open(os.path.join(root, file), "rb") as f:
                             process_single_file(file, f.read())
 
+        # ZIP output
         zip_output_path = os.path.join(temp_dir, "processed_output.zip")
         with zipfile.ZipFile(zip_output_path, "w") as zf:
             for file in os.listdir(processed_dir):
@@ -154,11 +156,11 @@ if uploaded_file:
             )
 
         st.components.v1.html(
-            '''
+            """
             <script>
-                var snd = new Audio("https://www.soundjay.com/buttons/sounds/button-09.mp3");
+                var snd = new Audio('https://www.soundjay.com/buttons/sounds/button-09.mp3');
                 snd.play();
             </script>
-            ''',
+            """,
             height=0
         )
