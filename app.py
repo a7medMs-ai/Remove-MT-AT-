@@ -1,76 +1,23 @@
 import streamlit as st
 import re
-from datetime import datetime
-from PIL import Image
-import io
 import zipfile
 import os
+import io
 import tempfile
 import rarfile
+from PIL import Image
 
 # ====== Configuration ======
-st.set_page_config(
-    page_title="SDLXLIFF Processor",
-    page_icon="⚙️",
-    layout="wide"
-)
+st.set_page_config(page_title="SDLXLIFF Processor", page_icon="⚙️", layout="wide")
 
-# ====== Image Loading Function ======
-def load_image():
+# ====== Load logo (optional) ======
+def load_logo():
     try:
-        with open("assets/future-group-logo.png", "rb") as f:
-            return Image.open(io.BytesIO(f.read()))
+        return Image.open("assets/future-group-logo.png")
     except:
         return None
 
-# ====== Header Section ======
-with st.container():
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        logo = load_image()
-        if logo:
-            st.image(logo, width=150)
-        else:
-            st.markdown(
-                """<div style="width:150px; height:150px; background-color:#f0f0f0; display:flex; align-items:center; justify-content:center;">
-                <p style="color:#666;">Company Logo</p>
-                </div>""",
-                unsafe_allow_html=True
-            )
-    with col2:
-        st.title("SDLXLIFF File Processor")
-        st.caption("Translation Engineering Tool - 2025 • v1.0.0")
-
-# ====== Sidebar ======
-with st.sidebar:
-    st.header("Developer Information")
-    st.subheader("Ahmed Mostafa Saad")
-    st.write(
-        """
-        - **Position**: Localization Engineering & TMS Support Team Lead  
-        - **Contact**: [ahmed.mostafaa@future-group.com](mailto:ahmed.mostafaa@future-group.com)  
-        - **Company**: Future Group Translation Services
-        """
-    )
-    st.divider()
-    st.header("Tool Instructions")
-    st.write(
-        """
-        1. Upload .sdlxliff file, or ZIP/RAR containing them  
-        2. Tool replaces:  
-           conf="..." origin="mt" origin-system="..."  
-           ⟶ conf="ApprovedTranslation" origin="interactive"  
-        3. Download processed files
-        """
-    )
-
-# ====== File Upload and Processing ======
-st.header("File Processing")
-uploaded_file = st.file_uploader(
-    "Upload SDLXLIFF / ZIP / RAR file",
-    type=["sdlxliff", "zip", "rar"]
-)
-
+# ====== Process Function ======
 def process_content(xml_text):
     xml_text = re.sub(
         r'conf="[^"]*"\s+origin="mt"\s+origin-system="[^"]*"',
@@ -84,41 +31,81 @@ def process_content(xml_text):
     )
     return xml_text
 
+# ====== Process Single File ======
+def process_single_file(file_name, file_bytes, output_dir, processed_files):
+    try:
+        xml = file_bytes.decode("utf-8")
+        modified = process_content(xml)
+        with open(os.path.join(output_dir, file_name), "w", encoding="utf-8") as f_out:
+            f_out.write(modified)
+        processed_files.append(file_name)
+        return True
+    except:
+        return False
+
+# ====== Header ======
+col1, col2 = st.columns([1, 4])
+with col1:
+    logo = load_logo()
+    if logo:
+        st.image(logo, width=100)
+    else:
+        st.markdown(
+            """
+            <div style="width:100px;height:100px;background:#eee;display:flex;align-items:center;justify-content:center;">
+            <span style="color:#888;">Logo</span>
+            </div>
+            """, unsafe_allow_html=True
+        )
+with col2:
+    st.title("SDLXLIFF File Processor")
+    st.caption("Future Group • Localization Engineering Tool • v1.0")
+
+# ====== Sidebar ======
+with st.sidebar:
+    st.header("About the Developer")
+    st.markdown("""
+    **Ahmed Mostafa Saad**  
+    Team Lead - Localization Engineering  
+    [ahmed.mostafaa@future-group.com](mailto:ahmed.mostafaa@future-group.com)
+    """)
+    st.divider()
+    st.markdown("### Instructions")
+    st.markdown("""
+    - Upload a `.sdlxliff`, `.zip`, or `.rar` file  
+    - Tool replaces MT segments with `ApprovedTranslation`  
+    - Download processed output as ZIP  
+    """)
+
+# ====== Upload ======
+st.header("Upload File")
+uploaded_file = st.file_uploader(
+    "Choose a .sdlxliff, .zip or .rar file",
+    type=["sdlxliff", "zip", "rar"]
+)
+
 if uploaded_file:
-    with st.spinner("Processing your file(s)..."):
+    with st.spinner("Processing..."):
         temp_dir = tempfile.mkdtemp()
-        processed_dir = os.path.join(temp_dir, "processed")
-        os.makedirs(processed_dir, exist_ok=True)
-
-        file_count = 0
-        processed_count = 0
+        output_dir = os.path.join(temp_dir, "output")
+        os.makedirs(output_dir, exist_ok=True)
         processed_files = []
+        file_count = 0
 
-        def process_single_file(file_name, raw_data):
-            nonlocal processed_count
-            try:
-                xml = raw_data.decode("utf-8")
-                processed = process_content(xml)
-                with open(os.path.join(processed_dir, file_name), "w", encoding="utf-8") as f_out:
-                    f_out.write(processed)
-                processed_files.append(file_name)
-                processed_count += 1
-            except:
-                pass
-
+        # ----- Handle different file types -----
         if uploaded_file.name.endswith(".sdlxliff"):
             file_count = 1
-            process_single_file(uploaded_file.name, uploaded_file.getvalue())
+            process_single_file(uploaded_file.name, uploaded_file.getvalue(), output_dir, processed_files)
 
         elif uploaded_file.name.endswith(".zip"):
-            with zipfile.ZipFile(uploaded_file, "r") as zip_ref:
-                zip_ref.extractall(temp_dir)
+            with zipfile.ZipFile(uploaded_file, "r") as zf:
+                zf.extractall(temp_dir)
                 for root, _, files in os.walk(temp_dir):
                     for file in files:
                         if file.endswith(".sdlxliff"):
                             file_count += 1
                             with open(os.path.join(root, file), "rb") as f:
-                                process_single_file(file, f.read())
+                                process_single_file(file, f.read(), output_dir, processed_files)
 
         elif uploaded_file.name.endswith(".rar"):
             with tempfile.NamedTemporaryFile(delete=False) as tmp_rar:
@@ -131,36 +118,35 @@ if uploaded_file:
                     if file.endswith(".sdlxliff"):
                         file_count += 1
                         with open(os.path.join(root, file), "rb") as f:
-                            process_single_file(file, f.read())
+                            process_single_file(file, f.read(), output_dir, processed_files)
 
-        # ZIP output
-        zip_output_path = os.path.join(temp_dir, "processed_output.zip")
-        with zipfile.ZipFile(zip_output_path, "w") as zf:
-            for file in os.listdir(processed_dir):
-                zf.write(os.path.join(processed_dir, file), arcname=file)
+        # ----- ZIP output -----
+        result_zip = os.path.join(temp_dir, "processed_files.zip")
+        with zipfile.ZipFile(result_zip, "w") as zipf:
+            for file in os.listdir(output_dir):
+                zipf.write(os.path.join(output_dir, file), arcname=file)
 
-        st.success("Processing completed successfully!")
-        st.write(f"✅ {processed_count} of {file_count} file(s) processed.")
+        st.success("✅ Processing Completed!")
+        st.write(f"Processed {len(processed_files)} of {file_count} file(s).")
 
         if processed_files:
-            st.markdown("### Processed File Names:")
-            for fname in processed_files:
-                st.write(f"- {fname}")
+            st.markdown("### Files Processed:")
+            for f in processed_files:
+                st.markdown(f"- {f}")
 
-        with open(zip_output_path, "rb") as f:
+        with open(result_zip, "rb") as f:
             st.download_button(
-                label="Download Processed Files",
+                label="⬇️ Download ZIP",
                 data=f,
-                file_name="processed_output.zip",
+                file_name="processed_files.zip",
                 mime="application/zip"
             )
 
+        # Play sound on finish
         st.components.v1.html(
             """
             <script>
-                var snd = new Audio('https://www.soundjay.com/buttons/sounds/button-09.mp3');
-                snd.play();
+            new Audio("https://www.soundjay.com/buttons/sounds/button-09.mp3").play();
             </script>
-            """,
-            height=0
+            """, height=0
         )
