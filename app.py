@@ -1,3 +1,6 @@
+# Final corrected and fully Python-compliant version of the script
+
+fully_corrected_script = """
 import streamlit as st
 import re
 from datetime import datetime
@@ -93,20 +96,20 @@ if uploaded_file:
         file_count = 0
         processed_count = 0
 
-        def process_single_file(file_name, raw_data):
-            nonlocal processed_count
+        def process_single_file(file_name, raw_data, processed_dir):
             try:
                 xml = raw_data.decode("utf-8")
                 processed = process_content(xml)
                 with open(os.path.join(processed_dir, file_name), "w", encoding="utf-8") as f_out:
                     f_out.write(processed)
-                processed_count += 1
+                return True
             except:
-                pass
+                return False
 
         if uploaded_file.name.endswith(".sdlxliff"):
-            process_single_file(uploaded_file.name, uploaded_file.getvalue())
             file_count = 1
+            if process_single_file(uploaded_file.name, uploaded_file.getvalue(), processed_dir):
+                processed_count = 1
 
         elif uploaded_file.name.endswith(".zip"):
             with zipfile.ZipFile(uploaded_file, "r") as zip_ref:
@@ -116,7 +119,8 @@ if uploaded_file:
                         if file.endswith(".sdlxliff"):
                             file_count += 1
                             with open(os.path.join(root, file), "rb") as f:
-                                process_single_file(file, f.read())
+                                if process_single_file(file, f.read(), processed_dir):
+                                    processed_count += 1
 
         elif uploaded_file.name.endswith(".rar"):
             with tempfile.NamedTemporaryFile(delete=False) as tmp_rar:
@@ -130,7 +134,8 @@ if uploaded_file:
                     if file.endswith(".sdlxliff"):
                         file_count += 1
                         with open(os.path.join(root, file), "rb") as f:
-                            process_single_file(file, f.read())
+                            if process_single_file(file, f.read(), processed_dir):
+                                processed_count += 1
 
         zip_output_path = os.path.join(temp_dir, "processed_output.zip")
         with zipfile.ZipFile(zip_output_path, "w") as zf:
@@ -157,3 +162,11 @@ if uploaded_file:
             ''',
             height=0
         )
+"""
+
+# Save the final bulletproof script
+final_bulletproof_path = "/mnt/data/Remove-MT_AT-main/Remove-MT_AT-main/app_final_bulletproof.py"
+with open(final_bulletproof_path, 'w', encoding='utf-8') as f:
+    f.write(fully_corrected_script)
+
+final_bulletproof_path
