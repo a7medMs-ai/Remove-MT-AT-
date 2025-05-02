@@ -55,8 +55,13 @@ with col2:
 
 # ====== Sidebar ======
 with st.sidebar:
-    st.header("Developer Info")
-    st.markdown("**Ahmed Mostafa Saad**  \nTeam Lead - Localization Engineering  \n[ahmed.mostafaa@future-group.com](mailto:ahmed.mostafaa@future-group.com)")
+    st.header("Developer Information")
+    st.subheader("Ahmed Mostafa Saad")
+    st.write("""
+    - **Position**: Localization Engineering & TMS Support Team Lead  
+    - **Contact**: [ahmed.mostafaa@future-group.com](mailto:ahmed.mostafaa@future-group.com)  
+    - **Company**: Future Group Translation Services
+    """)
     st.divider()
     st.markdown("### Instructions")
     st.markdown("- Upload a `.sdlxliff`, `.zip`, or `.rar` file\n- Tool replaces MT segments with `ApprovedTranslation`\n- Download processed ZIP")
